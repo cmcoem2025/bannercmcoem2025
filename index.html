@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BANNER CMCOEM 2025</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@700&display=swap');
+    body { font-family: 'Open Sans', sans-serif; text-align: center; padding: 20px; background-color: #f5f5f5; }
+    canvas { display: block; margin: 20px auto; border: 1px solid #ccc; }
+    #formulario { margin-bottom: 20px; }
+    input, select, button { font-size: 16px; padding: 8px; margin: 10px; }
+    #descargar { display: none; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>GENERA TU BANNER CMCOEM 2025</h1>
+  <div id="formulario">
+    <input type="text" id="nombre" placeholder="Nombre completo"><br>
+    <select id="genero">
+      <option value="mujer">Mujer</option>
+      <option value="hombre">Hombre</option>
+    </select><br>
+    <input type="file" id="foto" accept="image/png, image/jpeg, image/jpg, image/heic, image/heif"><br>
+    <button onclick="generarPlantilla()">Generar Banner</button>
+    <a id="descargar" download="plantilla.png">Descargar imagen</a>
+  </div>
+  <canvas id="canvas" width="1080" height="1080"></canvas>
+
+  <script>
+    function generarPlantilla() {
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const nombre = document.getElementById("nombre").value.trim();
+      const genero = document.getElementById("genero").value;
+      const archivoFoto = document.getElementById("foto").files[0];
+
+      if (!nombre || !archivoFoto) {
+        alert("Por favor, introduce tu nombre y selecciona una foto.");
+        return;
+      }
+
+      const plantilla = new Image();
+      plantilla.src = genero === "mujer" ? "mujer.jpeg" : "hombre.jpeg";
+
+      plantilla.onload = () => {
+        ctx.drawImage(plantilla, 0, 0, 1080, 1080);
+
+        const lector = new FileReader();
+        lector.onload = (e) => {
+          const foto = new Image();
+          foto.onload = () => {
+            // Calcular recorte de la imagen para centrado y ajuste en 1:1
+            const cuadroX = 102;
+            const cuadroY = 174;
+            const cuadroAncho = 412;
+            const cuadroAlto = 412;
+
+            const proporcionFoto = foto.width / foto.height;
+            const proporcionCuadro = cuadroAncho / cuadroAlto;
+
+            let srcX = 0, srcY = 0, srcW = foto.width, srcH = foto.height;
+
+            if (proporcionFoto > proporcionCuadro) {
+              // Foto más ancha, recortar lados
+              srcW = foto.height * proporcionCuadro;
+              srcX = (foto.width - srcW) / 2;
+            } else {
+              // Foto más alta, recortar arriba y abajo
+              srcH = foto.width / proporcionCuadro;
+              srcY = (foto.height - srcH) / 2;
+            }
+
+            ctx.drawImage(foto, srcX, srcY, srcW, srcH, cuadroX, cuadroY, cuadroAncho, cuadroAlto);
+
+            ctx.font = "bold 24px 'Open Sans'";
+            ctx.fillStyle = "#0b2d5d";
+            ctx.textAlign = "center";
+            const titulo = genero === "mujer" ? "Dra. " : "Dr. ";
+            ctx.fillText(titulo + nombre, 320, 612);
+
+            const enlace = document.getElementById("descargar");
+            enlace.href = canvas.toDataURL("image/png");
+            enlace.style.display = "inline";
+          };
+          foto.src = e.target.result;
+        };
+        lector.readAsDataURL(archivoFoto);
+      };
+    }
+  </script>
+</body>
+</html>
